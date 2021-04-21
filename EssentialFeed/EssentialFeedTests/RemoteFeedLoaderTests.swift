@@ -26,13 +26,13 @@ protocol HTTPClient {
 
 class RemoteFeedLoaderTests: XCTestCase {
   
-  func test_init_doesNotHaveUrl() {
+  func test_init_doesNotRequestDataFromUrl() {
     let (_, client) = makeSUT()
     
     XCTAssertNil(client.requestUrl)
   }
   
-  func test_load_hasUrl() {
+  func test_load_requestDataFromUrl() {
     let url = URL(string: "https://a-given-url.com")!
     let (sut, client) = makeSUT(url: url)
     
