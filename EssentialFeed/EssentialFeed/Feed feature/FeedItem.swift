@@ -9,7 +9,7 @@ import Foundation
 
 public struct FeedItem: Equatable {
   public let id: UUID
-  public var description: String?
+  public let description: String?
   public let location: String?
   public let imageUrl: URL
   
@@ -18,14 +18,5 @@ public struct FeedItem: Equatable {
     self.description = description
     self.location = location
     self.imageUrl = imageUrl
-  }
-}
-
-extension FeedItem: Decodable {
-  private enum CodingKeys: String, CodingKey {
-    case id
-    case description
-    case location
-    case imageUrl = "image"
   }
 }
