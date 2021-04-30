@@ -29,16 +29,17 @@ class UrlSessionHTTPClientTests: XCTestCase {
   func test_getFromUrl_failsOnRequestError() {
     URLProtocolStub.startInterceptingRequests()
     let url = URL(string: "https://any-url.com")!
-    let expectedError = URLProtocolStub.ErrorStub.unknown
+    let expectedError = NSError.init(domain: "any-error", code: 1)
     URLProtocolStub.stub(url, error: expectedError)
+    
     let sut = UrlSessionHTTPClient()
     
     let exp = expectation(description: "Wait until get completes.")
-    
     sut.get(from: url) { result in
       switch result {
-      case .failure(let receivedError as URLProtocolStub.ErrorStub):
-        XCTAssertEqual(receivedError, expectedError)
+      case .failure(let receivedError as NSError):
+        XCTAssertEqual(receivedError.domain, expectedError.domain)
+        XCTAssertEqual(receivedError.code, expectedError.code)
       default:
         XCTFail("Excpected failure with error: \(expectedError), got \(result) instead.")
       }
@@ -51,10 +52,6 @@ class UrlSessionHTTPClientTests: XCTestCase {
 
 class URLProtocolStub: URLProtocol {
   private static var stub = [URL: Stub]()
-  
-  enum ErrorStub: Error, Equatable {
-    case unknown
-  }
   
   struct Stub {
     let error: Error?
@@ -78,6 +75,7 @@ class URLProtocolStub: URLProtocol {
   
   override func startLoading() {
     guard let url = request.url, let stub = URLProtocolStub.stub[url] else { return }
+    
     if let error = stub.error {
       client?.urlProtocol(self, didFailWithError: error)
     }
@@ -95,3 +93,4 @@ class URLProtocolStub: URLProtocol {
     stub = [:]
   }
 }
+
