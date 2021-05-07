@@ -15,10 +15,14 @@ class UrlSessionHTTPClient {
     self.session = session
   }
   
+  struct UnexpectedCaseError: Error {}
+  
   func get(from url: URL, completion: @escaping (HTTPClientResult) -> Void) {
     session.dataTask(with: url) { _, _, error in
       if let error = error {
         completion(.failure(error))
+      } else {
+        completion(.failure(UnexpectedCaseError()))
       }
     }.resume()
   }
@@ -50,7 +54,7 @@ class UrlSessionHTTPClientTests: XCTestCase {
   
   func test_getFromUrl_failsOnRequestError() {
     let expectedError = NSError.init(domain: "any-error", code: 1)
-    URLProtocolStub.stub(error: expectedError)
+    URLProtocolStub.stub(data: nil, response: nil, error: expectedError)
     
     let exp = expectation(description: "Wait until get completes.")
     makeSUT().get(from: anyURL()) { result in
@@ -60,6 +64,22 @@ class UrlSessionHTTPClientTests: XCTestCase {
         XCTAssertEqual(receivedError.code, expectedError.code)
       default:
         XCTFail("Excpected failure with error: \(expectedError), got \(result) instead.")
+      }
+      exp.fulfill()
+    }
+    wait(for: [exp], timeout: 1.0)
+  }
+  
+  func test_getFromUrl_failsOnAllEmpty() {
+    URLProtocolStub.stub(data: nil, response: nil, error: nil)
+    
+    let exp = expectation(description: "Wait until get completes.")
+    makeSUT().get(from: anyURL()) { result in
+      switch result {
+      case .failure:
+        break
+      default:
+        XCTFail("Excpected failure, got \(result) instead.")
       }
       exp.fulfill()
     }
@@ -87,7 +107,7 @@ class URLProtocolStub: URLProtocol {
     let error: Error?
   }
   
-  static func stub(data: Data? = nil, response: URLResponse? = nil, error: Error? = nil) {
+  static func stub(data: Data?, response: URLResponse?, error: Error?) {
     stub = Stub(data: data, response: response, error: error)
   }
   
