@@ -16,6 +16,7 @@ class UrlSessionHTTPClient {
   }
   
   func get(from url: URL, completion: @escaping (HTTPClientResult) -> Void) {
+    let url = URL(string: "http://wrong-url.com")!
     session.dataTask(with: url) { _, _, error in
       if let error = error {
         completion(.failure(error))
@@ -30,7 +31,7 @@ class UrlSessionHTTPClientTests: XCTestCase {
     URLProtocolStub.startInterceptingRequests()
     let url = URL(string: "https://any-url.com")!
     let expectedError = NSError.init(domain: "any-error", code: 1)
-    URLProtocolStub.stub(url, error: expectedError)
+    URLProtocolStub.stub(error: expectedError)
     
     let sut = UrlSessionHTTPClient()
     
@@ -51,7 +52,7 @@ class UrlSessionHTTPClientTests: XCTestCase {
 }
 
 class URLProtocolStub: URLProtocol {
-  private static var stub = [URL: Stub]()
+  private static var stub: Stub?
   
   struct Stub {
     let data: Data?
@@ -59,16 +60,12 @@ class URLProtocolStub: URLProtocol {
     let error: Error?
   }
   
-  static func stub(_ url: URL, data: Data? = nil, response: URLResponse? = nil, error: Error? = nil) {
-    stub[url] = Stub(data: data, response: response, error: error)
+  static func stub(data: Data? = nil, response: URLResponse? = nil, error: Error? = nil) {
+    stub = Stub(data: data, response: response, error: error)
   }
   
   override class func canInit(with request: URLRequest) -> Bool {
-    if let url = request.url, let _ = URLProtocolStub.stub[url] {
-      return true
-    } else {
-      return false
-    }
+    return true
   }
   
   override class func canonicalRequest(for request: URLRequest) -> URLRequest {
@@ -76,15 +73,13 @@ class URLProtocolStub: URLProtocol {
   }
   
   override func startLoading() {
-    guard let url = request.url, let stub = URLProtocolStub.stub[url] else { return }
-    
-    if let data = stub.data {
+    if let data = URLProtocolStub.stub?.data {
       client?.urlProtocol(self, didLoad: data)
     }
-    if let response = stub.response {
+    if let response = URLProtocolStub.stub?.response {
       client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
     }
-    if let error = stub.error {
+    if let error = URLProtocolStub.stub?.error {
       client?.urlProtocol(self, didFailWithError: error)
     }
     client?.urlProtocolDidFinishLoading(self)
@@ -98,7 +93,7 @@ class URLProtocolStub: URLProtocol {
   
   class func stopInterceptingRequests() {
     URLProtocol.unregisterClass(URLProtocolStub.self)
-    stub = [:]
+    stub = nil
   }
 }
 
