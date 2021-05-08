@@ -18,9 +18,11 @@ class UrlSessionHTTPClient {
   struct UnexpectedCaseError: Error {}
   
   func get(from url: URL, completion: @escaping (HTTPClientResult) -> Void) {
-    session.dataTask(with: url) { _, _, error in
+    session.dataTask(with: url) { data, response, error in
       if let error = error {
         completion(.failure(error))
+      } else if let data = data, data.count > 0, let response = response as? HTTPURLResponse {
+        completion(.success(response, data))
       } else {
         completion(.failure(UnexpectedCaseError()))
       }
@@ -30,12 +32,12 @@ class UrlSessionHTTPClient {
 
 class UrlSessionHTTPClientTests: XCTestCase {
   
-  override class func setUp() {
+  override func setUp() {
     super.setUp()
     URLProtocolStub.startInterceptingRequests()
   }
   
-  override class func tearDown() {
+  override func tearDown() {
     super.tearDown()
     URLProtocolStub.stopInterceptingRequests()
   }
@@ -74,6 +76,25 @@ class UrlSessionHTTPClientTests: XCTestCase {
     XCTAssertNotNil(resultErrorFor(data: anyData(), response: noHTTPResponse(), error: anyNSError()))
     XCTAssertNotNil(resultErrorFor(data: anyData(), response: anyHTTPResponse(), error: anyNSError()))
     XCTAssertNotNil(resultErrorFor(data: anyData(), response: noHTTPResponse(), error: nil))
+  }
+  
+  func test_getFromUrl_succeedsOnHTTPResponseWithData() {
+    let data = anyData()
+    let response = anyHTTPResponse()
+    URLProtocolStub.stub(data: data, response: response, error: nil)
+    let exp = expectation(description: "Wait until completes!")
+    makeSUT().get(from: anyURL()) { result in
+      switch result {
+      case .success(let receivedResponse, let receivedData):
+        XCTAssertEqual(receivedResponse.url, response.url)
+        XCTAssertEqual(receivedResponse.statusCode, response.statusCode)
+        XCTAssertEqual(receivedData, data)
+      default:
+        XCTFail("Excpected success, got \(result) instead.")
+      }
+      exp.fulfill()
+    }
+    wait(for: [exp], timeout: 1.0)
   }
   
   private func resultErrorFor(data: Data?, response: URLResponse?, error: Error?, file: StaticString = #filePath, line: UInt = #line) -> Error? {
