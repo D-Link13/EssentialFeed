@@ -21,7 +21,7 @@ class UrlSessionHTTPClient {
     session.dataTask(with: url) { data, response, error in
       if let error = error {
         completion(.failure(error))
-      } else if let data = data, data.count > 0, let response = response as? HTTPURLResponse {
+      } else if let data = data, let response = response as? HTTPURLResponse {
         completion(.success(response, data))
       } else {
         completion(.failure(UnexpectedCaseError()))
@@ -68,7 +68,6 @@ class UrlSessionHTTPClientTests: XCTestCase {
   func test_getFromUrl_failsOnInvalidRepresentationCases() {
     XCTAssertNotNil(resultErrorFor(data: nil, response: nil, error: nil))
     XCTAssertNotNil(resultErrorFor(data: nil, response: noHTTPResponse(), error: nil))
-    XCTAssertNotNil(resultErrorFor(data: nil, response: anyHTTPResponse(), error: nil))
     XCTAssertNotNil(resultErrorFor(data: anyData(), response: nil, error: nil))
     XCTAssertNotNil(resultErrorFor(data: anyData(), response: nil, error: anyNSError()))
     XCTAssertNotNil(resultErrorFor(data: nil, response: noHTTPResponse(), error: anyNSError()))
@@ -89,6 +88,25 @@ class UrlSessionHTTPClientTests: XCTestCase {
         XCTAssertEqual(receivedResponse.url, response.url)
         XCTAssertEqual(receivedResponse.statusCode, response.statusCode)
         XCTAssertEqual(receivedData, data)
+      default:
+        XCTFail("Excpected success, got \(result) instead.")
+      }
+      exp.fulfill()
+    }
+    wait(for: [exp], timeout: 1.0)
+  }
+    
+  func test_getFromUrl_succeedsWithEmptyDataOnHTTPResponseWithNilData() {
+    let response = anyHTTPResponse()
+    URLProtocolStub.stub(data: nil, response: response, error: nil)
+    let exp = expectation(description: "Wait until completes!")
+    makeSUT().get(from: anyURL()) { result in
+      switch result {
+      case .success(let receivedResponse, let receivedData):
+        let emptyData = Data()
+        XCTAssertEqual(receivedResponse.url, response.url)
+        XCTAssertEqual(receivedResponse.statusCode, response.statusCode)
+        XCTAssertEqual(receivedData, emptyData)
       default:
         XCTFail("Excpected success, got \(result) instead.")
       }
