@@ -16,7 +16,7 @@ class RemoteFeedLoaderTests: XCTestCase {
   }
   
   func test_load_requestsDataFromUrl() {
-    let url = URL(string: "https://a-given-url.com")!
+    let url = anyURL()
     let (sut, client) = makeSUT(url: url)
     
     sut.load { _ in }
@@ -25,7 +25,7 @@ class RemoteFeedLoaderTests: XCTestCase {
   }
   
   func test_loadTwice_requestsDataFromUrlTwice() {
-    let url = URL(string: "https://a-given-url.com")!
+    let url = anyURL()
     let (sut, client) = makeSUT(url: url)
     
     sut.load { _ in }
@@ -38,7 +38,7 @@ class RemoteFeedLoaderTests: XCTestCase {
     let (sut, client) = makeSUT()
     
     expect(sut, delivers: failure(.connectivity)) {
-      let clientError = NSError(domain: "Test", code: 0)
+      let clientError = anyNSError()
       client.complete(with: clientError)
     }
   }
@@ -79,12 +79,12 @@ class RemoteFeedLoaderTests: XCTestCase {
     let item1 = makeItemAndJSON(id: UUID(),
                             description: nil,
                             location: nil,
-                            imageUrl: URL(string: "https://a-given-url.com")!)
+                            imageUrl: anyURL())
     
     let item2 = makeItemAndJSON(id: UUID(),
                             description: "Description",
                             location: "Location",
-                            imageUrl: URL(string: "https://a-given-url.com")!)
+                            imageUrl: anyURL())
     
     let items = makeItems([item1.json, item2.json])
     
@@ -95,7 +95,7 @@ class RemoteFeedLoaderTests: XCTestCase {
   
   func test_load_doesNotDeliverResultAfterInstanceHasBeenDeallocated() {
     let client = HTTPClientSpy()
-    let url = URL(string: "https://any-url.com")!
+    let url = anyURL()
     var sut: RemoteFeedLoader? = RemoteFeedLoader(client: client, url: url)
     
     var capturedResults = [RemoteFeedLoader.Result]()
@@ -109,7 +109,7 @@ class RemoteFeedLoaderTests: XCTestCase {
   
   // MARK: - Helpers
   
-  private func makeSUT(url: URL = URL(string: "https://a-given-url.com")!, file: StaticString = #filePath, line: UInt = #line) -> (sut: RemoteFeedLoader, client: HTTPClientSpy) {
+  private func makeSUT(url: URL = anyURL(), file: StaticString = #filePath, line: UInt = #line) -> (sut: RemoteFeedLoader, client: HTTPClientSpy) {
     let client = HTTPClientSpy()
     let sut = RemoteFeedLoader(client: client, url: url)
     

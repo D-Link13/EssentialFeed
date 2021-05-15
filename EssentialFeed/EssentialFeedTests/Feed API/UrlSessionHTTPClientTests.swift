@@ -77,6 +77,14 @@ class UrlSessionHTTPClientTests: XCTestCase {
     XCTAssertEqual(resultValues?.data, emptyData)
   }
   
+  // MARK: - Helpers
+  
+  private func makeSUT(file: StaticString = #filePath, line: UInt = #line) -> HTTPClient {
+    let sut = UrlSessionHTTPClient()
+    trackForMemoryLeaks(sut, file: file, line: line)
+    return sut
+  }
+  
   private func resultSuccessValuesFor(data: Data?, response: URLResponse?, error: Error?, file: StaticString = #filePath, line: UInt = #line) -> (response:HTTPURLResponse, data:Data)? {
     let result = resultFor(data: data, response: response, error: error, file:file, line: line)
     
@@ -114,32 +122,6 @@ class UrlSessionHTTPClientTests: XCTestCase {
     }
     wait(for: [exp], timeout: 1.0)
     return receivedResult
-  }
-  
-  private func makeSUT(file: StaticString = #filePath, line: UInt = #line) -> HTTPClient {
-    let sut = UrlSessionHTTPClient()
-    trackForMemoryLeaks(sut, file: file, line: line)
-    return sut
-  }
-  
-  private func anyURL() -> URL {
-    return URL(string: "https://any-url.com")!
-  }
-  
-  private func anyData() -> Data {
-    return Data("any-data".utf8)
-  }
-  
-  private func anyNSError() -> NSError {
-    return NSError(domain: "any-error", code: 0, userInfo: nil)
-  }
-  
-  private func anyHTTPResponse() -> HTTPURLResponse {
-    return HTTPURLResponse(url: anyURL(), statusCode: 200, httpVersion: nil, headerFields: nil)!
-  }
-  
-  private func noHTTPResponse() -> URLResponse {
-    return URLResponse(url: anyURL(), mimeType: nil, expectedContentLength: 0, textEncodingName: nil)
   }
 }
 
