@@ -26,11 +26,15 @@ class EssentialFeedEndToEndTests: XCTestCase {
     
     switch receivedResult {
     case .success(let items):
-      XCTAssertEqual(items.count, 8)
-      items.enumerated().forEach { [weak self] (index, item) in
-        guard let self = self else { return }
-        XCTAssertEqual(item, self.expectedItem(at: index))
-      }
+      XCTAssertEqual(items.count, 8, "Expected 8 items")
+      XCTAssertEqual(items[0], self.expectedItem(at: 0))
+      XCTAssertEqual(items[1], self.expectedItem(at: 1))
+      XCTAssertEqual(items[2], self.expectedItem(at: 2))
+      XCTAssertEqual(items[3], self.expectedItem(at: 3))
+      XCTAssertEqual(items[4], self.expectedItem(at: 4))
+      XCTAssertEqual(items[5], self.expectedItem(at: 5))
+      XCTAssertEqual(items[6], self.expectedItem(at: 6))
+      XCTAssertEqual(items[7], self.expectedItem(at: 7))
     case .failure(let error):
       XCTFail("Expected success, but received failure with an error: \(error).")
     default:
