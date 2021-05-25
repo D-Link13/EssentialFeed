@@ -33,7 +33,7 @@ class EssentialFeedEndToEndTests: XCTestCase {
   
   private func getFeedResult(file: StaticString = #filePath, line: UInt = #line) -> LoadFeedResult? {
     let testServerUrl = URL(string: "https://essentialdeveloper.com/feed-case-study/test-api/feed")!
-    let client = UrlSessionHTTPClient(session: .shared)
+    let client = UrlSessionHTTPClient(session: URLSession(configuration: .ephemeral))
     let loader = RemoteFeedLoader(client: client, url: testServerUrl)
     trackForMemoryLeaks(client, file: file, line: line)
     trackForMemoryLeaks(loader, file: file, line: line)
