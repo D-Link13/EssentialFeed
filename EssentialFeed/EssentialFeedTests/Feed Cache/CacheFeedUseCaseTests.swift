@@ -64,7 +64,7 @@ class FeedStore {
 
 class CacheFeedUseCaseTests: XCTestCase {
   
-  func test_init_doesNotDeleteCacheUponCreation() {
+  func test_init_doesNotMessageStoreUponCreation() {
     let (store, _) = makeSUT()
     
     XCTAssertEqual(store.receivedMessages, [])
