@@ -27,18 +27,24 @@ class LocalFeedLoader {
       }
     }
   }
+  
 }
+
 
 class FeedStore {
   typealias DeleteCompletion = (Error?) -> Void
   
-  var deleteCachedFeedCallCount = 0
   var deleteCompletions: [DeleteCompletion] = []
-  var insertions: [(items: [FeedItem], timestamp: Date)] = []
+  private(set) var receivedMessages: [ReceivedMessage] = []
+  
+  enum ReceivedMessage: Equatable {
+    case deleteCachedFeed
+    case insert(items: [FeedItem], timestamp: Date)
+  }
   
   func deleteCachedFeed(_ completion: @escaping DeleteCompletion) {
-    deleteCachedFeedCallCount += 1
     deleteCompletions.append(completion)
+    receivedMessages.append(.deleteCachedFeed)
   }
   
   func completeDeletion(with error: Error, at index: Int = 0) {
@@ -50,22 +56,27 @@ class FeedStore {
   }
   
   func insert(items: [FeedItem], timestamp: Date) {
-    insertions.append((items, timestamp))
+    receivedMessages.append(.insert(items: items, timestamp: timestamp))
   }
+  
 }
+
 
 class CacheFeedUseCaseTests: XCTestCase {
   
   func test_init_doesNotDeleteCacheUponCreation() {
-    XCTAssertEqual(makeSUT().store.deleteCachedFeedCallCount, 0)
+    let (store, _) = makeSUT()
+    
+    XCTAssertEqual(store.receivedMessages, [])
   }
   
   func test_save_requestsCacheDeletionOnce() {
+    let items = [uniqueItem(), uniqueItem()]
     let (store, sut) = makeSUT()
     
-    sut.save([uniqueItem(), uniqueItem()])
+    sut.save(items)
     
-    XCTAssertEqual(store.deleteCachedFeedCallCount, 1)
+    XCTAssertEqual(store.receivedMessages, [.deleteCachedFeed])
   }
   
   func test_save_doesNotRequestInsertionOnDeletionFailure() {
@@ -74,7 +85,7 @@ class CacheFeedUseCaseTests: XCTestCase {
     sut.save([uniqueItem(), uniqueItem()])
     store.completeDeletion(with: anyNSError())
     
-    XCTAssertEqual(store.insertions.count, 0)
+    XCTAssertEqual(store.receivedMessages, [.deleteCachedFeed])
   }
   
   func test_save_requestsInsetionWithtimestampOnDeletionSuccessful() {
@@ -85,10 +96,9 @@ class CacheFeedUseCaseTests: XCTestCase {
     sut.save(items)
     store.completeDeletionSuccessfully()
     
-    XCTAssertEqual(store.insertions.count, 1)
-    XCTAssertEqual(store.insertions[0].items, items)
-    XCTAssertEqual(store.insertions[0].timestamp, timestamp)
+    XCTAssertEqual(store.receivedMessages, [.deleteCachedFeed, .insert(items: items, timestamp: timestamp)])
   }
+  
   
   // MARK: - Helpers
   
@@ -103,5 +113,5 @@ class CacheFeedUseCaseTests: XCTestCase {
   func uniqueItem() -> FeedItem {
     return FeedItem(id: UUID(), description: "any", location: "any", imageUrl: anyURL())
   }
-  
+
 }
