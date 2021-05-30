@@ -22,9 +22,10 @@ class LocalFeedLoader {
   func save(_ items: [FeedItem], completion: @escaping (Error?) -> Void) {
     store.deleteCachedFeed() { [weak self] error in
       guard let self = self else { return }
-      completion(error)
       if error == nil {
-        self.store.insert(items: items, timestamp: self.currentDate())
+        self.store.insert(items: items, timestamp: self.currentDate(), completion: completion)
+      } else {
+        completion(error)
       }
     }
   }
@@ -34,8 +35,10 @@ class LocalFeedLoader {
 
 class FeedStore {
   typealias DeleteCompletion = (Error?) -> Void
+  typealias InsertCompletion = (Error?) -> Void
   
   var deleteCompletions: [DeleteCompletion] = []
+  var insertCompletions: [InsertCompletion] = []
   private(set) var receivedMessages: [ReceivedMessage] = []
   
   enum ReceivedMessage: Equatable {
@@ -56,8 +59,13 @@ class FeedStore {
     deleteCompletions[index](nil)
   }
   
-  func insert(items: [FeedItem], timestamp: Date) {
+  func insert(items: [FeedItem], timestamp: Date, completion: @escaping DeleteCompletion) {
+    insertCompletions.append(completion)
     receivedMessages.append(.insert(items: items, timestamp: timestamp))
+  }
+  
+  func completeInsertion(with error: Error, at index: Int = 0) {
+    insertCompletions[index](error)
   }
   
 }
@@ -115,6 +123,24 @@ class CacheFeedUseCaseTests: XCTestCase {
     wait(for: [exp], timeout: 1.0)
     
     XCTAssertEqual(receivedError as NSError?, deletionError)
+  }
+  
+  func test_save_failsOnInsertionFailure() {
+    let (store, sut) = makeSUT()
+    let exp = expectation(description: "Wait until save completes")
+    let insertionError = anyNSError()
+    
+    var receivedError: Error?
+    sut.save([uniqueItem(), uniqueItem()]) { error in
+      receivedError = error
+      exp.fulfill()
+    }
+    store.completeDeletionSuccessfully()
+    store.completeInsertion(with: insertionError)
+    
+    wait(for: [exp], timeout: 1.0)
+    
+    XCTAssertEqual(receivedError as NSError?, insertionError)
   }
   
   // MARK: - Helpers
