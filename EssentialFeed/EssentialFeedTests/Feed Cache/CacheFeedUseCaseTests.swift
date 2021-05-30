@@ -8,73 +8,6 @@
 import XCTest
 import EssentialFeed
 
-class LocalFeedLoader {
-  typealias CurrentDateProvider = () -> Date
-  
-  private let currentDate: CurrentDateProvider
-  private let store: FeedStore
-  
-  init(store: FeedStore, currentDate: @escaping CurrentDateProvider) {
-    self.store = store
-    self.currentDate = currentDate
-  }
-  
-  func save(_ items: [FeedItem], completion: @escaping (Error?) -> Void) {
-    store.deleteCachedFeed() { [weak self] error in
-      guard let self = self else { return }
-      if error == nil {
-        self.store.insert(items: items, timestamp: self.currentDate(), completion: completion)
-      } else {
-        completion(error)
-      }
-    }
-  }
-  
-}
-
-
-class FeedStore {
-  typealias DeleteCompletion = (Error?) -> Void
-  typealias InsertCompletion = (Error?) -> Void
-  
-  var deleteCompletions: [DeleteCompletion] = []
-  var insertCompletions: [InsertCompletion] = []
-  private(set) var receivedMessages: [ReceivedMessage] = []
-  
-  enum ReceivedMessage: Equatable {
-    case deleteCachedFeed
-    case insert(items: [FeedItem], timestamp: Date)
-  }
-  
-  func deleteCachedFeed(_ completion: @escaping DeleteCompletion) {
-    deleteCompletions.append(completion)
-    receivedMessages.append(.deleteCachedFeed)
-  }
-  
-  func completeDeletion(with error: Error, at index: Int = 0) {
-    deleteCompletions[index](error)
-  }
-  
-  func completeDeletionSuccessfully(at index: Int = 0) {
-    deleteCompletions[index](nil)
-  }
-  
-  func insert(items: [FeedItem], timestamp: Date, completion: @escaping DeleteCompletion) {
-    insertCompletions.append(completion)
-    receivedMessages.append(.insert(items: items, timestamp: timestamp))
-  }
-  
-  func completeInsertion(with error: Error, at index: Int = 0) {
-    insertCompletions[index](error)
-  }
-  
-  func completeInsertionSuccessfully(at index: Int = 0) {
-    insertCompletions[index](nil)
-  }
-  
-}
-
-
 class CacheFeedUseCaseTests: XCTestCase {
   
   func test_init_doesNotMessageStoreUponCreation() {
@@ -142,15 +75,15 @@ class CacheFeedUseCaseTests: XCTestCase {
   
   // MARK: - Helpers
   
-  func makeSUT(currentDate: @escaping () -> Date = Date.init, file: StaticString = #filePath, line: UInt = #line) -> (store: FeedStore, sut: LocalFeedLoader) {
-    let store = FeedStore()
+  private func makeSUT(currentDate: @escaping () -> Date = Date.init, file: StaticString = #filePath, line: UInt = #line) -> (store: FeedStoreSpy, sut: LocalFeedLoader) {
+    let store = FeedStoreSpy()
     let sut = LocalFeedLoader(store: store, currentDate: currentDate)
     trackForMemoryLeaks(store, file: file, line: line)
     trackForMemoryLeaks(sut, file: file, line: line)
     return (store, sut)
   }
   
-  func expect(_ sut: LocalFeedLoader, toCompleteWith expectedError: NSError?, when action: () -> (), file: StaticString = #filePath, line: UInt = #line) {
+  private func expect(_ sut: LocalFeedLoader, toCompleteWith expectedError: NSError?, when action: () -> (), file: StaticString = #filePath, line: UInt = #line) {
     let exp = expectation(description: "Wait until save completes")
     
     var receivedError: Error?
@@ -165,8 +98,46 @@ class CacheFeedUseCaseTests: XCTestCase {
     XCTAssertEqual(receivedError as NSError?, expectedError, file: file, line: line)
   }
   
-  func uniqueItem() -> FeedItem {
+  private func uniqueItem() -> FeedItem {
     return FeedItem(id: UUID(), description: "any", location: "any", imageUrl: anyURL())
+  }
+  
+  private class FeedStoreSpy: FeedStore {
+    var deleteCompletions: [DeleteCompletion] = []
+    var insertCompletions: [InsertCompletion] = []
+    private(set) var receivedMessages: [ReceivedMessage] = []
+    
+    enum ReceivedMessage: Equatable {
+      case deleteCachedFeed
+      case insert(items: [FeedItem], timestamp: Date)
+    }
+    
+    func deleteCachedFeed(_ completion: @escaping DeleteCompletion) {
+      deleteCompletions.append(completion)
+      receivedMessages.append(.deleteCachedFeed)
+    }
+    
+    func completeDeletion(with error: Error, at index: Int = 0) {
+      deleteCompletions[index](error)
+    }
+    
+    func completeDeletionSuccessfully(at index: Int = 0) {
+      deleteCompletions[index](nil)
+    }
+    
+    func insert(items: [FeedItem], timestamp: Date, completion: @escaping InsertCompletion) {
+      insertCompletions.append(completion)
+      receivedMessages.append(.insert(items: items, timestamp: timestamp))
+    }
+    
+    func completeInsertion(with error: Error, at index: Int = 0) {
+      insertCompletions[index](error)
+    }
+    
+    func completeInsertionSuccessfully(at index: Int = 0) {
+      insertCompletions[index](nil)
+    }
+    
   }
 
 }
