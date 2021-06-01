@@ -9,6 +9,7 @@ import Foundation
 
 public final class LocalFeedLoader {
   public typealias CurrentDateProvider = () -> Date
+  public typealias SaveResult = Error?
   
   private let currentDate: CurrentDateProvider
   private let store: FeedStore
@@ -25,7 +26,7 @@ public final class LocalFeedLoader {
     }
   }
   
-  public func save(_ items: [FeedItem], completion: @escaping (Error?) -> Void) {
+  public func save(_ items: [FeedItem], completion: @escaping (SaveResult) -> Void) {
     store.deleteCachedFeed() { [weak self] error in
       guard let self = self else { return }
       if let cacheDeletionError = error {

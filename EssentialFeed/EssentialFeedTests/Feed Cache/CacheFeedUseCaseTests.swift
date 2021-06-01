@@ -77,10 +77,8 @@ class CacheFeedUseCaseTests: XCTestCase {
     let store = FeedStoreSpy()
     var sut: LocalFeedLoader? = LocalFeedLoader(store: store, currentDate: Date.init)
     
-    var receivedErrors: [Error?] = []
-    sut?.save([uniqueItem()], completion: { error in
-      receivedErrors.append(error)
-    })
+    var receivedErrors: [LocalFeedLoader.SaveResult] = []
+    sut?.save([uniqueItem()], completion: { receivedErrors.append($0) })
     
     sut = nil
     store.completeDeletion(with: anyNSError())
@@ -92,10 +90,8 @@ class CacheFeedUseCaseTests: XCTestCase {
     let store = FeedStoreSpy()
     var sut: LocalFeedLoader? = LocalFeedLoader(store: store, currentDate: Date.init)
     
-    var receivedErrors: [Error?] = []
-    sut?.save([uniqueItem()], completion: { error in
-      receivedErrors.append(error)
-    })
+    var receivedErrors: [LocalFeedLoader.SaveResult] = []
+    sut?.save([uniqueItem()], completion: { receivedErrors.append($0) })
     
     store.completeDeletionSuccessfully()
     sut = nil
