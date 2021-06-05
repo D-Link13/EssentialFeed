@@ -142,12 +142,12 @@ class LoadFeedFromRemoteUseCaseTests: XCTestCase {
     wait(for: [exp], timeout: 1.0)
   }
   
-  private func makeItemAndJSON(id: UUID, description: String?, location: String?, imageUrl: URL) -> (model: FeedItem, json: [String: Any]) {
-    let model = FeedItem(
+  private func makeItemAndJSON(id: UUID, description: String?, location: String?, imageUrl: URL) -> (model: FeedImage, json: [String: Any]) {
+    let model = FeedImage(
       id: id,
       description: description,
       location: location,
-      imageUrl: imageUrl
+      url: imageUrl
     )
     
     let json = [

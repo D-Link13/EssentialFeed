@@ -12,16 +12,16 @@ class EssentialFeedEndToEndTests: XCTestCase {
   
   func test_endToEndTestServerGETFeedResult_matchesFixedTestAccountData() {
     switch getFeedResult() {
-    case .success(let items):
-      XCTAssertEqual(items.count, 8, "Expected 8 items")
-      XCTAssertEqual(items[0], self.expectedItem(at: 0))
-      XCTAssertEqual(items[1], self.expectedItem(at: 1))
-      XCTAssertEqual(items[2], self.expectedItem(at: 2))
-      XCTAssertEqual(items[3], self.expectedItem(at: 3))
-      XCTAssertEqual(items[4], self.expectedItem(at: 4))
-      XCTAssertEqual(items[5], self.expectedItem(at: 5))
-      XCTAssertEqual(items[6], self.expectedItem(at: 6))
-      XCTAssertEqual(items[7], self.expectedItem(at: 7))
+    case .success(let feedImages):
+      XCTAssertEqual(feedImages.count, 8, "Expected 8 items")
+      XCTAssertEqual(feedImages[0], self.expectedImage(at: 0))
+      XCTAssertEqual(feedImages[1], self.expectedImage(at: 1))
+      XCTAssertEqual(feedImages[2], self.expectedImage(at: 2))
+      XCTAssertEqual(feedImages[3], self.expectedImage(at: 3))
+      XCTAssertEqual(feedImages[4], self.expectedImage(at: 4))
+      XCTAssertEqual(feedImages[5], self.expectedImage(at: 5))
+      XCTAssertEqual(feedImages[6], self.expectedImage(at: 6))
+      XCTAssertEqual(feedImages[7], self.expectedImage(at: 7))
     case .failure(let error):
       XCTFail("Expected success, but received failure with an error: \(error).")
     default:
@@ -49,12 +49,12 @@ class EssentialFeedEndToEndTests: XCTestCase {
     return receivedResult
   }
   
-  private func expectedItem(at index: Int) -> FeedItem {
-    return FeedItem(
+  private func expectedImage(at index: Int) -> FeedImage {
+    return FeedImage(
       id: id(at: index),
       description: description(at: index),
       location: location(at: index),
-      imageUrl: imageURL(at: index))
+      url: imageURL(at: index))
   }
   
   private func id(at index: Int) -> UUID {
