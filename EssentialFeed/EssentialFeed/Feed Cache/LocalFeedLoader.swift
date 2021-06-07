@@ -37,6 +37,10 @@ public final class LocalFeedLoader {
     }
   }
   
+  public func load() {
+    store.retrieve()
+  }
+  
 }
 
 extension Array where Element == FeedImage {
