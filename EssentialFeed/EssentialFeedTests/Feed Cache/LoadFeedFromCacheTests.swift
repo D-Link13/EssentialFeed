@@ -35,7 +35,7 @@ class LoadFeedFromCacheTests: XCTestCase {
       case .failure(let error):
         capturedError = error
       default:
-        XCTFail("Expected failure, got \(result) instead"ç)
+        XCTFail("Expected failure, got \(result) instead")
       }
       exp.fulfill()
     }
