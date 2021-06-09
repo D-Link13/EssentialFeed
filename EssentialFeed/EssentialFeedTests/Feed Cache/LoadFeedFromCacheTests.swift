@@ -45,7 +45,7 @@ class LoadFeedFromCacheTests: XCTestCase {
     let fixedCurrentDate = Date()
     let (store, sut) = makeSUT { fixedCurrentDate }
     let feedImages = uniqueFeedImages()
-    let dateLessThenSevenDaysOld = Date().adding(days: -7).adding(seconds: 1)
+    let dateLessThenSevenDaysOld = fixedCurrentDate.adding(days: -7).adding(seconds: 1)
     
     expect(sut, toCompleteWith: .success(feedImages.models)) {
       store.completeRetrievalWith(cachedFeed: feedImages.local, timestamp: dateLessThenSevenDaysOld)
