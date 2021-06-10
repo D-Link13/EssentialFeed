@@ -26,3 +26,13 @@ func anyHTTPResponse() -> HTTPURLResponse {
 func noHTTPResponse() -> URLResponse {
   return URLResponse(url: anyURL(), mimeType: nil, expectedContentLength: 0, textEncodingName: nil)
 }
+
+extension Date {
+  func adding(days: Int) -> Date {
+    return Calendar(identifier: .gregorian).date(byAdding: .day, value: days, to: self)!
+  }
+  
+  func adding(seconds: TimeInterval) -> Date {
+    return self + seconds
+  }
+}
