@@ -7,27 +7,36 @@
 
 import Foundation
 
-public final class LocalFeedLoader {
+private final class FeedCachePolicy {
   public typealias CurrentDateProvider = () -> Date
   
   private let currentDate: CurrentDateProvider
-  private let store: FeedStore
   private let calendar = Calendar(identifier: .gregorian)
-  
-  public init(store: FeedStore, currentDate: @escaping CurrentDateProvider) {
-    self.store = store
-    self.currentDate = currentDate
-  }
-  
   private var maxCacheAgeInDays: Int {
     return 7
   }
   
-  private func validate(_ timestamp: Date) -> Bool {
+  init(currentDate: @escaping CurrentDateProvider) {
+    self.currentDate = currentDate
+  }
+  
+  func validate(_ timestamp: Date) -> Bool {
     guard let maxCacheAge = calendar.date(byAdding: .day, value: maxCacheAgeInDays, to: timestamp) else {
       return false
     }
     return currentDate() < maxCacheAge
+  }
+}
+
+public final class LocalFeedLoader {
+  private let store: FeedStore
+  private let currentDate: () -> Date
+  private let cachePolicy: FeedCachePolicy
+  
+  public init(store: FeedStore, currentDate: @escaping () -> Date) {
+    self.store = store
+    self.currentDate = currentDate
+    self.cachePolicy = FeedCachePolicy(currentDate: currentDate)
   }
   
 }
@@ -64,7 +73,7 @@ extension LocalFeedLoader: FeedLoader {
       switch result {
       case .failure(let error):
         completion(.failure(error))
-      case let .found(cache, timestamp) where self.validate(timestamp):
+      case let .found(cache, timestamp) where self.cachePolicy.validate(timestamp):
         completion(.success(cache.toModels()))
       case .found, .empty:
         completion(.success([]))
@@ -81,7 +90,7 @@ extension LocalFeedLoader {
       switch result {
       case .failure:
         self.store.deleteCachedFeed { _ in }
-      case .found(_, let timestamp) where !self.validate(timestamp):
+      case .found(_, let timestamp) where !self.cachePolicy.validate(timestamp):
         self.store.deleteCachedFeed { _ in }
       case .found, .empty:
         break
