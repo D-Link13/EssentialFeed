@@ -14,7 +14,8 @@ import EssentialFeed
 //    - Error (if possible to simulate, e.g., no write permission)
 //
 //- Retrieve
-//    - Empty cache works (before something is inserted)
+//    ✅ Empty cache works (before something is inserted)
+//    - Empty twice returns empty (no-side effects)
 //    - Non-empty cache returns data
 //    - Non-empty cache twice returns same data (retrieve should have no side-effects)
 //    - Error (if possible to simulate, e.g., invalid data)
@@ -45,6 +46,22 @@ class CodableFeedStoreTests: XCTestCase {
       default: XCTFail("Expected empty, got result: \(result)")
       }
       exp.fulfill()
+    }
+    wait(for: [exp], timeout: 1.0)
+  }
+  
+  func test_retrieveTwice_deliversEmptyOnEmptyCache() {
+    let sut = CodableFeedStore()
+    let exp = expectation(description: "Wait until retrieve is completed")
+    
+    sut.retrieve { firstResult in
+      sut.retrieve { secondResult in
+        switch (firstResult, secondResult) {
+        case (.empty, .empty): break
+        default: XCTFail("Expected empty twice, got firstResult: \(firstResult), secondResult: \(secondResult)")
+        }
+        exp.fulfill()
+      }
     }
     wait(for: [exp], timeout: 1.0)
   }
