@@ -9,14 +9,14 @@ import XCTest
 import EssentialFeed
 
 //- Insert
-//    - To empty cache works
+//    ✅ To empty cache works
 //    - To non-empty cache overrides previous value
 //    - Error (if possible to simulate, e.g., no write permission)
 //
 //- Retrieve
 //    ✅ Empty cache works (before something is inserted)
 //    ✅ Empty twice returns empty (no-side effects)
-//    - Non-empty cache returns data
+//    ✅ Non-empty cache returns data
 //    - Non-empty cache twice returns same data (retrieve should have no side-effects)
 //    - Error (if possible to simulate, e.g., invalid data)
 //
