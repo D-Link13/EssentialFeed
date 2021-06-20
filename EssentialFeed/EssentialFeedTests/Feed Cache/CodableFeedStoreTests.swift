@@ -18,7 +18,7 @@ import EssentialFeed
 //    ✅ Empty twice returns empty (no-side effects)
 //    ✅ Non-empty cache returns data
 //    ✅ Non-empty cache twice returns same data (retrieve should have no side-effects)
-//    - Error (if possible to simulate, e.g., invalid data)
+//    ✅ Error (if possible to simulate, e.g., invalid data)
 //
 //- Delete
 //    - Empty cache does nothing (cache stays empty and does not fail)
@@ -75,10 +75,15 @@ class CodableFeedStore {
       completion(.empty)
       return
     }
-    let decoder = JSONDecoder()
-    let cache = try! decoder.decode(Cache.self, from: data)
-    completion(.found(cache.localFeed, cache.timestamp))
+    do {
+      let decoder = JSONDecoder()
+      let cache = try decoder.decode(Cache.self, from: data)
+      completion(.found(cache.localFeed, cache.timestamp))
+    } catch {
+      completion(.failure(error))
+    }
   }
+  
 }
 
 class CodableFeedStoreTests: XCTestCase {
@@ -126,6 +131,14 @@ class CodableFeedStoreTests: XCTestCase {
     
     expect(sut, toRetrieveTwice: .found(insertionFeed, insertionTimestamp))
   }
+  
+  func test_retrieve_deliversFailureOnInvalidData() {
+    let sut = makeSUT()
+    
+    try! "invalid data".write(to: testSpecificStoreURL(), atomically: false, encoding: .utf8)
+    
+    expect(sut, toRetrieve: .failure(anyNSError()))
+  }
  
   // MARK: - Helpers
   
@@ -170,10 +183,9 @@ class CodableFeedStoreTests: XCTestCase {
     let exp = expectation(description: "Wait till retrieve completes")
     sut.retrieve { actualResult in
       switch (expectedResult, actualResult) {
-      case (.empty, .empty):
+      case (.empty, .empty),
+           (.failure, .failure):
         break
-      case let (.failure(expectedError as NSError), .failure(actualError as NSError)):
-        XCTAssertEqual(expectedError, actualError, file: file, line: line)
       case let (.found(expectedFeed, expectedTimestamp), .found(actualFeed, actualTimestamp)):
         XCTAssertEqual(expectedFeed, actualFeed, file: file, line: line)
         XCTAssertEqual(expectedTimestamp, actualTimestamp, file: file, line: line)
