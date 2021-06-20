@@ -103,18 +103,8 @@ class CodableFeedStoreTests: XCTestCase {
   
   func test_retrieveTwice_deliversEmptyOnEmptyCache() {
     let sut = makeSUT()
-    let exp = expectation(description: "Wait until retrieve is completed")
     
-    sut.retrieve { firstResult in
-      sut.retrieve { secondResult in
-        switch (firstResult, secondResult) {
-        case (.empty, .empty): break
-        default: XCTFail("Expected empty twice, got firstResult: \(firstResult), secondResult: \(secondResult)")
-        }
-        exp.fulfill()
-      }
-    }
-    wait(for: [exp], timeout: 1.0)
+    expect(sut, toRetrieveTwice: .empty)
   }
 
   func test_retrieveAfterInsertingToEmptyCache_deliversInsertedValues() {
@@ -140,20 +130,11 @@ class CodableFeedStoreTests: XCTestCase {
     
     sut.insert(insertionFeed, timestamp: insertionTimestamp) { insertionError in
       XCTAssertNil(insertionError, "Expected to insert with no error")
-      sut.retrieve { firstRetrievedResult in
-        sut.retrieve { secondRetrievedResult in
-          switch (firstRetrievedResult, secondRetrievedResult) {
-          case let (.found(firstRetrievedFeed, firstRetrievedTimestamp), .found(secondRetrievedFeed, secondRetrievedTimestamp)) :
-            XCTAssertEqual(firstRetrievedFeed, secondRetrievedFeed)
-            XCTAssertEqual(firstRetrievedTimestamp, secondRetrievedTimestamp)
-          default:
-            XCTFail("Expected equal .found results, got result: \((firstRetrievedResult, secondRetrievedResult))")
-          }
-          exp.fulfill()
-        }
-      }
+      exp.fulfill()
     }
     wait(for: [exp], timeout: 1.0)
+    
+    expect(sut, toRetrieveTwice: .found(insertionFeed, insertionTimestamp))
   }
  
   // MARK: - Helpers
@@ -178,6 +159,11 @@ class CodableFeedStoreTests: XCTestCase {
   
   private func undoStoreSideEffects() {
     deleteStoreArtifacts()
+  }
+  
+  private func expect(_ sut: CodableFeedStore, toRetrieveTwice expectedResult: RetrievalResult, file:StaticString = #filePath, line: UInt = #line) {
+    expect(sut, toRetrieve: expectedResult, file: file, line: line)
+    expect(sut, toRetrieve: expectedResult, file: file, line: line)
   }
   
   private func expect(_ sut: CodableFeedStore, toRetrieve expectedResult: RetrievalResult, file:StaticString = #filePath, line: UInt = #line) {
