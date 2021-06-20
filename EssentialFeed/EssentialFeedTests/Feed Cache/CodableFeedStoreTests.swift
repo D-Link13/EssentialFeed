@@ -111,13 +111,8 @@ class CodableFeedStoreTests: XCTestCase {
     let sut = makeSUT()
     let insertionFeed = uniqueFeedImages().local
     let insertionTimestamp = Date()
-    let exp = expectation(description: "Wait until retrieve is completed")
     
-    sut.insert(insertionFeed, timestamp: insertionTimestamp) { insertionError in
-      XCTAssertNil(insertionError, "Expected to insert with no error")
-      exp.fulfill()
-    }
-    wait(for: [exp], timeout: 1.0)
+    insert((feed: insertionFeed, timestamp: insertionTimestamp), to: sut)
     
     expect(sut, toRetrieve: .found(insertionFeed, insertionTimestamp))
   }
@@ -126,13 +121,8 @@ class CodableFeedStoreTests: XCTestCase {
     let sut = makeSUT()
     let insertionFeed = uniqueFeedImages().local
     let insertionTimestamp = Date()
-    let exp = expectation(description: "Wait until retrieve is completed")
     
-    sut.insert(insertionFeed, timestamp: insertionTimestamp) { insertionError in
-      XCTAssertNil(insertionError, "Expected to insert with no error")
-      exp.fulfill()
-    }
-    wait(for: [exp], timeout: 1.0)
+    insert((feed: insertionFeed, timestamp: insertionTimestamp), to: sut)
     
     expect(sut, toRetrieveTwice: .found(insertionFeed, insertionTimestamp))
   }
@@ -159,6 +149,16 @@ class CodableFeedStoreTests: XCTestCase {
   
   private func undoStoreSideEffects() {
     deleteStoreArtifacts()
+  }
+  
+  private func insert(_ insertion: (feed: [LocalFeedImage], timestamp: Date), to sut: CodableFeedStore) {
+    let exp = expectation(description: "Wait until retrieve is completed")
+    
+    sut.insert(insertion.feed, timestamp: insertion.timestamp) { insertionError in
+      XCTAssertNil(insertionError, "Expected to insert with no error")
+      exp.fulfill()
+    }
+    wait(for: [exp], timeout: 1.0)
   }
   
   private func expect(_ sut: CodableFeedStore, toRetrieveTwice expectedResult: RetrievalResult, file:StaticString = #filePath, line: UInt = #line) {
