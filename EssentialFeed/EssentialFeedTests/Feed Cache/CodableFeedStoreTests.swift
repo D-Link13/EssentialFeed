@@ -97,16 +97,8 @@ class CodableFeedStoreTests: XCTestCase {
   
   func test_retrieve_deliversEmptyOnEmptyCache() {
     let sut = makeSUT()
-    let exp = expectation(description: "Wait until retrieve is completed")
     
-    sut.retrieve { result in
-      switch result {
-      case .empty: break
-      default: XCTFail("Expected empty, got result: \(result)")
-      }
-      exp.fulfill()
-    }
-    wait(for: [exp], timeout: 1.0)
+    expect(sut, toRetrieve: .empty)
   }
   
   func test_retrieveTwice_deliversEmptyOnEmptyCache() {
@@ -133,18 +125,11 @@ class CodableFeedStoreTests: XCTestCase {
     
     sut.insert(insertionFeed, timestamp: insertionTimestamp) { insertionError in
       XCTAssertNil(insertionError, "Expected to insert with no error")
-      sut.retrieve { retrievedResult in
-        switch retrievedResult {
-        case let .found(retrievedFeed, retrievedTimestamp):
-          XCTAssertEqual(insertionFeed, retrievedFeed)
-          XCTAssertEqual(insertionTimestamp, retrievedTimestamp)
-        default:
-          XCTFail("Expected found result, got result: \(retrievedResult)")
-        }
-        exp.fulfill()
-      }
+      exp.fulfill()
     }
     wait(for: [exp], timeout: 1.0)
+    
+    expect(sut, toRetrieve: .found(insertionFeed, insertionTimestamp))
   }
   
   func test_retrieve_hasNoSideEffectsOnNonEmptyCache() {
@@ -195,4 +180,22 @@ class CodableFeedStoreTests: XCTestCase {
     deleteStoreArtifacts()
   }
   
+  private func expect(_ sut: CodableFeedStore, toRetrieve expectedResult: RetrievalResult, file:StaticString = #filePath, line: UInt = #line) {
+    let exp = expectation(description: "Wait till retrieve completes")
+    sut.retrieve { actualResult in
+      switch (expectedResult, actualResult) {
+      case (.empty, .empty):
+        break
+      case let (.failure(expectedError as NSError), .failure(actualError as NSError)):
+        XCTAssertEqual(expectedError, actualError, file: file, line: line)
+      case let (.found(expectedFeed, expectedTimestamp), .found(actualFeed, actualTimestamp)):
+        XCTAssertEqual(expectedFeed, actualFeed, file: file, line: line)
+        XCTAssertEqual(expectedTimestamp, actualTimestamp, file: file, line: line)
+      default: XCTFail("Expected to restrieve \(expectedResult) result, got result: \(actualResult) instead", file: file, line: line)
+      }
+      exp.fulfill()
+    }
+    wait(for: [exp], timeout: 1.0)
+  }
+
 }
