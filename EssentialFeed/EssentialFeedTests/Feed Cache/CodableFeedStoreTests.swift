@@ -21,14 +21,15 @@ import EssentialFeed
 //    ✅ Error (if possible to simulate, e.g., invalid data)
 //
 //- Delete
-//    - Empty cache does nothing (cache stays empty and does not fail)
-//    - Inserted data leaves cache empty
-//    - Error (if possible to simulate, e.g., no write permission)
+//    ✅ Empty cache does nothing (cache stays empty and does not fail)
+//    ✅ Inserted data leaves cache empty
+//    ✅ Error (if possible to simulate, e.g., no write permission)
 //
 //- Side-effects must run serially to avoid race-conditions (deleting the wrong cache... overriding the latest data...)
 
 
 class CodableFeedStore {
+  
   private struct Cache: Codable {
     var feed: [CodableFeedImage]
     var timestamp: Date
@@ -84,6 +85,19 @@ class CodableFeedStore {
       completion(.found(cache.localFeed, cache.timestamp))
     } catch {
       completion(.failure(error))
+    }
+  }
+  
+  func deleteCachedFeed(_ completion: @escaping FeedStore.DeleteCompletion) {
+    guard FileManager.default.fileExists(atPath: storeURL.path) else {
+      completion(nil)
+      return
+    }
+    do {
+      try FileManager.default.removeItem(at: storeURL)
+      completion(nil)
+    } catch {
+      completion(error)
     }
   }
   
@@ -179,6 +193,34 @@ class CodableFeedStoreTests: XCTestCase {
     XCTAssertNotNil(insertionError, "Expected to insert with error")
   }
  
+  func test_delete_hasNoSideEffectsOnEmptyCache() {
+    let sut = makeSUT()
+    
+    let deletionError = deleteCache(from: sut)
+    
+    XCTAssertNil(deletionError, "Expected to delete successfully")
+    expect(sut, toRetrieve: .empty)
+  }
+  
+  func test_delete_cleansPreviouslyInsertedCache() {
+    let sut = makeSUT()
+    insert((feed: uniqueFeedImages().local, timestamp: Date()), to: sut)
+    
+    let deletionError = deleteCache(from: sut)
+    
+    XCTAssertNil(deletionError, "Expect non-empty cache deletion to succeed")
+    expect(sut, toRetrieve: .empty)
+  }
+  
+  func test_delete_deliversErrorOnStoreURLWithNoDeletePermitions() {
+    let noDeletePermissionURL = cachesDirectoryURL()
+    let sut = makeSUT(storeURL: noDeletePermissionURL)
+    
+    let deletionError = deleteCache(from: sut)
+    
+    XCTAssertNotNil(deletionError, "Expected cache deletion to fail with error")
+  }
+  
   // MARK: - Helpers
   
   private func makeSUT(storeURL: URL? = nil, file: StaticString = #filePath, line: UInt = #line) -> CodableFeedStore {
@@ -188,7 +230,11 @@ class CodableFeedStoreTests: XCTestCase {
   }
   
   private func testSpecificStoreURL() -> URL {
-    FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent("\(type(of: self)).store")
+    cachesDirectoryURL().appendingPathComponent("\(type(of: self)).store")
+  }
+  
+  private func cachesDirectoryURL() -> URL {
+    FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
   }
   
   private func deleteStoreArtifacts() {
@@ -205,11 +251,23 @@ class CodableFeedStoreTests: XCTestCase {
   
   @discardableResult
   private func insert(_ insertion: (feed: [LocalFeedImage], timestamp: Date), to sut: CodableFeedStore) -> Error? {
-    let exp = expectation(description: "Wait until retrieve is completed")
+    let exp = expectation(description: "Wait until insert is completed")
     
     var capturedError: Error?
     sut.insert(insertion.feed, timestamp: insertion.timestamp) { insertionError in
       capturedError = insertionError
+      exp.fulfill()
+    }
+    wait(for: [exp], timeout: 1.0)
+    return capturedError
+  }
+  
+  private func deleteCache(from sut: CodableFeedStore) -> Error? {
+    let exp = expectation(description: "Wait until delete is completed")
+    
+    var capturedError: Error?
+    sut.deleteCachedFeed { deletionError in
+      capturedError = deletionError
       exp.fulfill()
     }
     wait(for: [exp], timeout: 1.0)
