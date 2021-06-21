@@ -223,7 +223,7 @@ class CodableFeedStoreTests: XCTestCase {
   
   // MARK: - Helpers
   
-  private func makeSUT(storeURL: URL? = nil, file: StaticString = #filePath, line: UInt = #line) -> CodableFeedStore {
+  private func makeSUT(storeURL: URL? = nil, file: StaticString = #filePath, line: UInt = #line) -> FeedStore {
     let sut = CodableFeedStore(storeURL: storeURL ?? testSpecificStoreURL())
     trackForMemoryLeaks(sut, file: file, line: line)
     return sut
@@ -250,7 +250,7 @@ class CodableFeedStoreTests: XCTestCase {
   }
   
   @discardableResult
-  private func insert(_ insertion: (feed: [LocalFeedImage], timestamp: Date), to sut: CodableFeedStore) -> Error? {
+  private func insert(_ insertion: (feed: [LocalFeedImage], timestamp: Date), to sut: FeedStore) -> Error? {
     let exp = expectation(description: "Wait until insert is completed")
     
     var capturedError: Error?
@@ -262,7 +262,7 @@ class CodableFeedStoreTests: XCTestCase {
     return capturedError
   }
   
-  private func deleteCache(from sut: CodableFeedStore) -> Error? {
+  private func deleteCache(from sut: FeedStore) -> Error? {
     let exp = expectation(description: "Wait until delete is completed")
     
     var capturedError: Error?
@@ -274,12 +274,12 @@ class CodableFeedStoreTests: XCTestCase {
     return capturedError
   }
   
-  private func expect(_ sut: CodableFeedStore, toRetrieveTwice expectedResult: RetrievalResult, file:StaticString = #filePath, line: UInt = #line) {
+  private func expect(_ sut: FeedStore, toRetrieveTwice expectedResult: RetrievalResult, file:StaticString = #filePath, line: UInt = #line) {
     expect(sut, toRetrieve: expectedResult, file: file, line: line)
     expect(sut, toRetrieve: expectedResult, file: file, line: line)
   }
   
-  private func expect(_ sut: CodableFeedStore, toRetrieve expectedResult: RetrievalResult, file:StaticString = #filePath, line: UInt = #line) {
+  private func expect(_ sut: FeedStore, toRetrieve expectedResult: RetrievalResult, file:StaticString = #filePath, line: UInt = #line) {
     let exp = expectation(description: "Wait till retrieve completes")
     sut.retrieve { actualResult in
       switch (expectedResult, actualResult) {
