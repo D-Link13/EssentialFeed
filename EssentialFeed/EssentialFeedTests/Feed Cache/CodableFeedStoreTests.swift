@@ -28,7 +28,7 @@ import EssentialFeed
 //- Side-effects must run serially to avoid race-conditions (deleting the wrong cache... overriding the latest data...)
 
 
-class CodableFeedStore {
+class CodableFeedStore: FeedStore {
   
   private struct Cache: Codable {
     var feed: [CodableFeedImage]
@@ -61,7 +61,7 @@ class CodableFeedStore {
     self.storeURL = storeURL
   }
   
-  func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping FeedStore.InsertCompletion) {
+  func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertCompletion) {
     let codableFeed = feed.map { CodableFeedImage(local: $0) }
     do {
       let cache = Cache(feed: codableFeed, timestamp: timestamp)
@@ -74,7 +74,7 @@ class CodableFeedStore {
     }
   }
   
-  func retrieve(completion: @escaping FeedStore.RetrieveCompletion) {
+  func retrieve(completion: @escaping RetrieveCompletion) {
     guard let data = try? Data.init(contentsOf: storeURL) else {
       completion(.empty)
       return
@@ -88,7 +88,7 @@ class CodableFeedStore {
     }
   }
   
-  func deleteCachedFeed(_ completion: @escaping FeedStore.DeleteCompletion) {
+  func deleteCachedFeed(_ completion: @escaping DeleteCompletion) {
     guard FileManager.default.fileExists(atPath: storeURL.path) else {
       completion(nil)
       return
