@@ -11,7 +11,7 @@ import EssentialFeed
 //- Insert
 //    ✅ To empty cache works
 //    ✅ To non-empty cache overrides previous value
-//    - Error (if possible to simulate, e.g., no write permission)
+//    ✅ Error (if possible to simulate, e.g., no write permission)
 //
 //- Retrieve
 //    ✅ Empty cache works (before something is inserted)
@@ -62,12 +62,15 @@ class CodableFeedStore {
   
   func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping FeedStore.InsertCompletion) {
     let codableFeed = feed.map { CodableFeedImage(local: $0) }
-    let cache = Cache(feed: codableFeed, timestamp: timestamp)
-    let encoder = JSONEncoder()
-    let data = try! encoder.encode(cache)
-    try! data.write(to: storeURL)
-    
-    completion(nil)
+    do {
+      let cache = Cache(feed: codableFeed, timestamp: timestamp)
+      let encoder = JSONEncoder()
+      let data = try encoder.encode(cache)
+      try data.write(to: storeURL)
+      completion(nil)
+    } catch {
+      completion(error)
+    }
   }
   
   func retrieve(completion: @escaping FeedStore.RetrieveCompletion) {
@@ -163,6 +166,17 @@ class CodableFeedStoreTests: XCTestCase {
     XCTAssertNil(latestInsertionError, "Expected to override cache successfully")
     
     expect(sut, toRetrieve: .found(latestFeed, latestTimestamp))
+  }
+  
+  func test_insert_deliversErrorOnInvalidStoreURL() {
+    let invalidStoreURL = URL(string: "invalid://store-url")!
+    let sut = makeSUT(storeURL: invalidStoreURL)
+    let insertionFeed = uniqueFeedImages().local
+    let insertionTimestamp = Date()
+    
+    let insertionError = insert((feed: insertionFeed, timestamp: insertionTimestamp), to: sut)
+    
+    XCTAssertNotNil(insertionError, "Expected to insert with error")
   }
  
   // MARK: - Helpers
