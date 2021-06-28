@@ -152,24 +152,24 @@ class CodableFeedStoreTests: XCTestCase {
     
     let op1 = expectation(description: "Operation 1")
     sut.insert(uniqueFeedImages().local, timestamp: Date()) { _ in
-      op1.fulfill()
       completedOperationsInOrder.append(op1)
+      op1.fulfill()
     }
     
     let op2 = expectation(description: "Operation 2")
     sut.deleteCachedFeed { _ in
-      op2.fulfill()
       completedOperationsInOrder.append(op2)
+      op2.fulfill()
     }
     
     let op3 = expectation(description: "Operation 3")
     sut.insert(uniqueFeedImages().local, timestamp: Date()) { _ in
-      op3.fulfill()
       completedOperationsInOrder.append(op3)
+      op3.fulfill()
     }
     
     waitForExpectations(timeout: 5.0)
-    XCTAssertEqual(completedOperationsInOrder, [op1, op2, op3])
+    XCTAssertEqual(completedOperationsInOrder, [op1, op2, op3], "Expected side-effects operations to run serially, but operation finished in wrong order")
   }
   
   // MARK: - Helpers
