@@ -35,48 +35,62 @@ public class CodableFeedStore: FeedStore {
   }
   
   private let storeURL: URL
-  
+  private let queue = DispatchQueue.init(label: "\(CodableFeedStore.self)Queue", qos: .userInitiated)
   public init(storeURL: URL) {
     self.storeURL = storeURL
   }
   
   public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertCompletion) {
-    let codableFeed = feed.map { CodableFeedImage(local: $0) }
-    do {
-      let cache = Cache(feed: codableFeed, timestamp: timestamp)
-      let encoder = JSONEncoder()
-      let data = try encoder.encode(cache)
-      try data.write(to: storeURL)
-      completion(nil)
-    } catch {
-      completion(error)
+    let storeURL = self.storeURL
+    executeInSyncQueue {
+      let codableFeed = feed.map { CodableFeedImage(local: $0) }
+      do {
+        let cache = Cache(feed: codableFeed, timestamp: timestamp)
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(cache)
+        try data.write(to: storeURL)
+        completion(nil)
+      } catch {
+        completion(error)
+      }
     }
   }
   
   public func retrieve(completion: @escaping RetrieveCompletion) {
-    guard let data = try? Data.init(contentsOf: storeURL) else {
-      completion(.empty)
-      return
-    }
-    do {
-      let decoder = JSONDecoder()
-      let cache = try decoder.decode(Cache.self, from: data)
-      completion(.found(cache.localFeed, cache.timestamp))
-    } catch {
-      completion(.failure(error))
+    let storeURL = self.storeURL
+    executeInSyncQueue {
+      guard let data = try? Data.init(contentsOf: storeURL) else {
+        completion(.empty)
+        return
+      }
+      do {
+        let decoder = JSONDecoder()
+        let cache = try decoder.decode(Cache.self, from: data)
+        completion(.found(cache.localFeed, cache.timestamp))
+      } catch {
+        completion(.failure(error))
+      }
     }
   }
   
   public func deleteCachedFeed(_ completion: @escaping DeleteCompletion) {
-    guard FileManager.default.fileExists(atPath: storeURL.path) else {
-      completion(nil)
-      return
+    let storeURL = self.storeURL
+    executeInSyncQueue {
+      guard FileManager.default.fileExists(atPath: storeURL.path) else {
+        return completion(nil)
+      }
+      do {
+        try FileManager.default.removeItem(at: storeURL)
+        completion(nil)
+      } catch {
+        completion(error)
+      }
     }
-    do {
-      try FileManager.default.removeItem(at: storeURL)
-      completion(nil)
-    } catch {
-      completion(error)
+  }
+  
+  private func executeInSyncQueue(_ execClosure: () -> ()) {
+    queue.sync {
+      execClosure()
     }
   }
   
