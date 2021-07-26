@@ -151,7 +151,25 @@ class CodableFeedStoreTests: XCTestCase {
     wait(for: [exp], timeout: 3.0)
     XCTAssertEqual(completedOperations, [exp], "Expected insert to complete after timeout")
   }
+  
+/*
+  func test_retrieve_runsAsyncronously() {
+    let sut = makeSUT()
+    var completedOperations = [XCTestExpectation]()
+    let exp = expectation(description: "Wait until retrieve completes")
 
+    sut.retrieve { _ in
+      completedOperations.append(exp)
+      exp.fulfill()
+    }
+
+    XCTAssertEqual(completedOperations.count, 0, "Expected retrieve not to block further code execution (asyncronous)")
+    wait(for: [exp], timeout: 3.0)
+    XCTAssertEqual(completedOperations, [exp], "Expected retrieve to complete after timeout")
+  }
+*/
+
+/*
   func test_delete_runAsyncronously() {
     let sut = makeSUT()
     var completedOperations = [XCTestExpectation]()
@@ -166,21 +184,7 @@ class CodableFeedStoreTests: XCTestCase {
     wait(for: [exp], timeout: 3.0)
     XCTAssertEqual(completedOperations, [exp], "Expected delete to complete after timeout")
   }
-
-  func test_retrieve_runsAsyncronously() {
-    let sut = makeSUT()
-    var completedOperations = [XCTestExpectation]()
-    let exp = expectation(description: "Wait until retrieve completes")
-    
-    sut.retrieve { _ in
-      completedOperations.append(exp)
-      exp.fulfill()
-    }
-
-    XCTAssertEqual(completedOperations.count, 0, "Expected retrieve not to block further code execution (asyncronous)")
-    wait(for: [exp], timeout: 3.0)
-    XCTAssertEqual(completedOperations, [exp], "Expected retrieve to complete after timeout")
-  }
+ */
   
   /*
   func test_delete_deliversErrorOnStoreURLWithNoDeletePermitions() {
