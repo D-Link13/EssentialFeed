@@ -25,7 +25,7 @@ import EssentialFeed
 //    ✅ Inserted data leaves cache empty
 //    ✅ Error (if possible to simulate, e.g., no write permission)
 //
-//- Side-effects must run serially to avoid race-conditions (deleting the wrong cache... overriding the latest data...)
+//✅ Side-effects must run serially to avoid race-conditions (deleting the wrong cache... overriding the latest data...)
 
 
 class CodableFeedStoreTests: XCTestCase {
@@ -137,14 +137,71 @@ class CodableFeedStoreTests: XCTestCase {
     expect(sut, toRetrieve: .empty)
   }
   
+  func test_insert_runAsyncronously() {
+    let sut = makeSUT()
+    var completedOperations = [XCTestExpectation]()
+
+    let exp = expectation(description: "Wait until insert completes")
+    sut.insert(uniqueFeedImages().local, timestamp: Date()) { _ in
+      completedOperations.append(exp)
+      exp.fulfill()
+    }
+
+    XCTAssertEqual(completedOperations.count, 0, "Expected insert not to block further code execution (asyncronous)")
+    wait(for: [exp], timeout: 3.0)
+    XCTAssertEqual(completedOperations, [exp], "Expected insert to complete after timeout")
+  }
+
+  func test_delete_runAsyncronously() {
+    let sut = makeSUT()
+    var completedOperations = [XCTestExpectation]()
+    let exp = expectation(description: "Wait until delete completes")
+
+    sut.deleteCachedFeed { _ in
+      completedOperations.append(exp)
+      exp.fulfill()
+    }
+
+    XCTAssertEqual(completedOperations.count, 0, "Expected delete not to block further code execution (asyncronous)")
+    wait(for: [exp], timeout: 3.0)
+    XCTAssertEqual(completedOperations, [exp], "Expected delete to complete after timeout")
+  }
+
+  func test_retrieve_runsAsyncronously() {
+    let sut = makeSUT()
+    var completedOperations = [XCTestExpectation]()
+    let exp = expectation(description: "Wait until retrieve completes")
+    
+    sut.retrieve { _ in
+      completedOperations.append(exp)
+      exp.fulfill()
+    }
+
+    XCTAssertEqual(completedOperations.count, 0, "Expected retrieve not to block further code execution (asyncronous)")
+    wait(for: [exp], timeout: 3.0)
+    XCTAssertEqual(completedOperations, [exp], "Expected retrieve to complete after timeout")
+  }
+  
+  /*
   func test_delete_deliversErrorOnStoreURLWithNoDeletePermitions() {
     let noDeletePermissionURL = cachesDirectoryURL()
     let sut = makeSUT(storeURL: noDeletePermissionURL)
+    let exp = expectation(description: "Wait until delete is completed")
+    let semaphore = DispatchSemaphore(value: 1)
     
+    var capturedError: Error?
+    sut.deleteCachedFeed { deletionError in
+      semaphore.wait()
+      capturedError = deletionError
+      semaphore.signal()
+      exp.fulfill()
+    }
+    wait(for: [exp], timeout: 2.0)
     let deletionError = deleteCache(from: sut)
     
-    XCTAssertNotNil(deletionError, "Expected cache deletion to fail with error")
+    XCTAssertNotNil(capturedError, "Expected cache deletion to fail with error")
   }
+ */
   
   func test_storeSideEffects_runSerially() {
     let sut = makeSUT()
@@ -187,7 +244,7 @@ class CodableFeedStoreTests: XCTestCase {
   private func cachesDirectoryURL() -> URL {
     FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
   }
-  
+    
   private func deleteStoreArtifacts() {
     try? FileManager.default.removeItem(at: testSpecificStoreURL())
   }
