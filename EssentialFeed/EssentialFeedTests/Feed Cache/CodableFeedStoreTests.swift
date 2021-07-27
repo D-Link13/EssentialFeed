@@ -27,7 +27,7 @@ import EssentialFeed
 //
 //✅ Side-effects must run serially to avoid race-conditions (deleting the wrong cache... overriding the latest data...)
 
-class CodableFeedStoreTests: XCTestCase, FailableFeedStoreSpecs {
+class CodableFeedStoreTests: XCTestCase, FailableFeedStoreSpecs, AsyncronusFeedStoreSpecs {
   
   override func setUp() {
     super.setUp()
@@ -111,7 +111,7 @@ class CodableFeedStoreTests: XCTestCase, FailableFeedStoreSpecs {
     
     assertThatInsertRunsAsyncronusly(on: sut)
   }
-  
+
   func test_insert_deliversErrorOnInsertionError() {
     let invalidStoreURL = URL(string: "invalid://store-url")!
     let sut = makeSUT(storeURL: invalidStoreURL)

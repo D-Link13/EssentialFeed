@@ -113,49 +113,6 @@ extension FeedStoreSpecs where Self: XCTestCase {
     
     XCTAssertEqual(completedOperationsInOrder, [op1, op2, op3], "Expected side-effects to run serially but operations finished in the wrong order", file: file, line: line)
   }
-  
-  func assertThatRetrieveRunsAsyncronusly(on sut: FeedStore, file: StaticString = #file, line: UInt = #line) {
-    var completedOperations = [XCTestExpectation]()
-    let exp = expectation(description: "Wait until retrieve completes")
-    
-    sut.retrieve { _ in
-      completedOperations.append(exp)
-      exp.fulfill()
-    }
-
-    XCTAssertEqual(completedOperations.count, 0, "Expected retrieve not to block further code execution (asyncronous)", file: file, line: line)
-    wait(for: [exp], timeout: 3.0)
-    XCTAssertEqual(completedOperations, [exp], "Expected retrieve to complete after timeout", file: file, line: line)
-  }
-  
-  func assertThatInsertRunsAsyncronusly(on sut: FeedStore, file: StaticString = #file, line: UInt = #line) {
-    var completedOperations = [XCTestExpectation]()
-    let exp = expectation(description: "Wait until insert completes")
-    
-    sut.insert(uniqueFeedImages().local, timestamp: Date()) { _ in
-      completedOperations.append(exp)
-      exp.fulfill()
-    }
-
-    XCTAssertEqual(completedOperations.count, 0, "Expected insert not to block further code execution (asyncronous)", file: file, line: line)
-    wait(for: [exp], timeout: 3.0)
-    XCTAssertEqual(completedOperations, [exp], "Expected insert to complete after timeout", file: file, line: line)
-  }
-  
-  func assertThatDeleteRunsAsyncronusly(on sut: FeedStore, file: StaticString = #file, line: UInt = #line) {
-    var completedOperations = [XCTestExpectation]()
-    let exp = expectation(description: "Wait until delete completes")
-    
-    sut.deleteCachedFeed { _ in
-      completedOperations.append(exp)
-      exp.fulfill()
-    }
-
-    XCTAssertEqual(completedOperations.count, 0, "Expected delete not to block further code execution (asyncronous)", file: file, line: line)
-    wait(for: [exp], timeout: 3.0)
-    XCTAssertEqual(completedOperations, [exp], "Expected delete to complete after timeout", file: file, line: line)
-  }
-  
 }
 
 extension FeedStoreSpecs where Self: XCTestCase {
@@ -174,7 +131,7 @@ extension FeedStoreSpecs where Self: XCTestCase {
   }
   
   @discardableResult
-  func deleteCache(from sut: FeedStore) -> Error? {
+  func deleteCache(from sut: FeedStore, timeout:TimeInterval = 1.0) -> Error? {
     let exp = expectation(description: "Wait until delete is completed")
     
     var capturedError: Error?
@@ -182,7 +139,7 @@ extension FeedStoreSpecs where Self: XCTestCase {
       capturedError = deletionError
       exp.fulfill()
     }
-    wait(for: [exp], timeout: 1.0)
+    wait(for: [exp], timeout: timeout)
     return capturedError
   }
   

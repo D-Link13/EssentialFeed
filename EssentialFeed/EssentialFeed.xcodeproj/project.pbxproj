@@ -39,6 +39,7 @@
 		90C5CFDD2652F86900689A7B /* XCTestCase+MemoryLeakTracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 908EF92726458CDD00337AAA /* XCTestCase+MemoryLeakTracking.swift */; };
 		90E7BA762649A37A00409AE6 /* UrlSessionHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E7BA752649A37A00409AE6 /* UrlSessionHTTPClient.swift */; };
 		90FE6E9D26500026007D5551 /* Global+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90FE6E9C26500026007D5551 /* Global+Helpers.swift */; };
+		F122BBCC26B0A9A300F62EAA /* XCTestCase + AsynchronusFeedStoreSpecs.swift in Sources */ = {isa = PBXBuildFile; fileRef = F122BBCB26B0A9A300F62EAA /* XCTestCase + AsynchronusFeedStoreSpecs.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -95,6 +96,7 @@
 		90C5CFD62652EE0F00689A7B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		90E7BA752649A37A00409AE6 /* UrlSessionHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UrlSessionHTTPClient.swift; sourceTree = "<group>"; };
 		90FE6E9C26500026007D5551 /* Global+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Global+Helpers.swift"; sourceTree = "<group>"; };
+		F122BBCB26B0A9A300F62EAA /* XCTestCase + AsynchronusFeedStoreSpecs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XCTestCase + AsynchronusFeedStoreSpecs.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,6 +134,7 @@
 				904EB27226B081E900A4ACD8 /* XCTestCase + FailableDeleteFeedStoreSpecs.swift */,
 				904EB27426B0823000A4ACD8 /* XCTestCase + FailableInsertFeedStoreSpecs.swift */,
 				904EB27626B0827800A4ACD8 /* XCTestCase + FailableRetrieveFeedStoreSpecs.swift */,
+				F122BBCB26B0A9A300F62EAA /* XCTestCase + AsynchronusFeedStoreSpecs.swift */,
 			);
 			path = FeedStoreSpecs;
 			sourceTree = "<group>";
@@ -429,6 +432,7 @@
 				9067C8BE262F45FF005DD190 /* LoadFeedFromRemoteUseCaseTests.swift in Sources */,
 				904EB27326B081E900A4ACD8 /* XCTestCase + FailableDeleteFeedStoreSpecs.swift in Sources */,
 				904EB27726B0827800A4ACD8 /* XCTestCase + FailableRetrieveFeedStoreSpecs.swift in Sources */,
+				F122BBCC26B0A9A300F62EAA /* XCTestCase + AsynchronusFeedStoreSpecs.swift in Sources */,
 				903161BF2639D96400504C25 /* UrlSessionHTTPClientTests.swift in Sources */,
 				905D088B266E75300050FA72 /* LoadFeedFromCacheTests.swift in Sources */,
 				90FE6E9D26500026007D5551 /* Global+Helpers.swift in Sources */,

@@ -12,18 +12,15 @@ protocol FeedStoreSpecs {
   func test_retrieveTwice_deliversEmptyOnEmptyCache()
   func test_retrieve_deliversFoundValuesAfterInsertion()
   func test_retrieve_hasNoSideEffectsOnNonEmptyCache()
-  func test_retrieve_runsAsyncronously()
   
   func test_insert_overridesPreviousInsertedCachedData()
   func test_insert_deliversNoErrorOnEmptyCache()
   func test_insert_deliversNoErrorOnNonEmptyCache()
-  func test_insert_runAsyncronously()
   
   func test_delete_hasNoSideEffectsOnEmptyCache()
   func test_delete_deliversNoErrorOnEmptyCache()
   func test_delete_cleansPreviouslyInsertedCache()
   func test_delete_deliversNoErrorOnNonEmptyCache()
-  func test_delete_runAsyncronously()
   
   func test_storeSideEffects_runSerially()
 }
@@ -44,3 +41,10 @@ protocol FailableDeleteFeedStoreSpecs: FeedStoreSpecs {
 }
 
 typealias FailableFeedStoreSpecs = FailableRetrieveFeedStoreSpecs & FailableInsertFeedStoreSpecs & FailableDeleteFeedStoreSpecs
+
+
+protocol AsyncronusFeedStoreSpecs: FeedStoreSpecs {
+  func test_retrieve_runsAsyncronously()
+  func test_insert_runAsyncronously()
+  func test_delete_runAsyncronously()
+}
