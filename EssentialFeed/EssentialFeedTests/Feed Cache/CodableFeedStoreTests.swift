@@ -27,8 +27,7 @@ import EssentialFeed
 //
 //✅ Side-effects must run serially to avoid race-conditions (deleting the wrong cache... overriding the latest data...)
 
-
-class CodableFeedStoreTests: XCTestCase {
+class CodableFeedStoreTests: XCTestCase, FailableFeedStoreSpecs {
   
   override func setUp() {
     super.setUp()
