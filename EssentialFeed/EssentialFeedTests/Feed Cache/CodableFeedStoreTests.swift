@@ -68,6 +68,7 @@ class CodableFeedStoreTests: XCTestCase, FailableFeedStoreSpecs {
   func test_retrieve_deliversFailureOnRetrieveError() {
     let storeURL = testSpecificStoreURL()
     let sut = makeSUT(storeURL: storeURL)
+    try! "invalid data".write(to: storeURL, atomically: false, encoding: .utf8)
     
     assertThatRetrieveDeliversFailureOnRetrievalError(on: sut)
   }
@@ -75,12 +76,14 @@ class CodableFeedStoreTests: XCTestCase, FailableFeedStoreSpecs {
   func test_retrieve_hasNoSideEffectsOnRetrieveError() {
     let storeURL = testSpecificStoreURL()
     let sut = makeSUT(storeURL: storeURL)
+    try! "invalid data".write(to: storeURL, atomically: false, encoding: .utf8)
     
     assertThatRetrieveHasNoSideEffectsOnFailure(on: sut)
   }
   
   func test_retrieve_runsAsyncronously() {
     let sut = makeSUT()
+    
     assertThatRetrieveRunsAsyncronusly(on: sut)
   }
   
@@ -188,7 +191,7 @@ class CodableFeedStoreTests: XCTestCase, FailableFeedStoreSpecs {
   }
   
   private func cachesDirectoryURL() -> URL {
-    FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+    FileManager.default.urls(for: .cachesDirectory, in: .allDomainsMask).first!
   }
     
   private func deleteStoreArtifacts() {
